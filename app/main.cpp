@@ -8,16 +8,16 @@ static struct cag_option options[] = {
         {
                 .identifier='g',
                 .access_letters="g",
-                .access_name="gen-keys",
+                .access_name="gen-key",
                 .value_name=nullptr,
-                .description="Generate key pair",
+                .description="Generate private key",
         },
         {
                 .identifier='k',
                 .access_letters="k",
                 .access_name="key",
                 .value_name="KEY_NAME",
-                .description="Key name. Default is 'key', will generate key and key.pub files containing private and public keys",
+                .description="Key file name. Default is 'key'",
         },
         {
                 .identifier='d',
