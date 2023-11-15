@@ -4,6 +4,8 @@
 
 #include "libs/cargs/cargs.h"
 
+#include "core/encryption/cpu/CPUEncryptor.hpp"
+
 static struct cag_option options[] = {
         {
                 .identifier='g',
@@ -101,7 +103,12 @@ int main(int argc, char **argv) {
     }
 
     if (config.gen_keys) {
-        // gen keys
+        encryption::CPUEncryptor encryptor = encryption::CPUEncryptor();
+
+        byte x[] = "ya ochen lublu sosat man cocks <3";
+        byte y[1000];
+
+        encryptor.encrypt(nullptr, sizeof(x), x, y);
     }
 
     if (!config.input_file_name) {
