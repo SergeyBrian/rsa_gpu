@@ -1,15 +1,8 @@
 #ifndef RSA_GPU_ENCRYPTOR_HPP
 #define RSA_GPU_ENCRYPTOR_HPP
 
-#define BLOCK_SIZE 16
-#define SECTION_SIZE 16
-
-#define R 4
-#define Nb 4
-#define Nk 8
-#define Nr 14
-
 #include "key.hpp"
+#include "state.hpp"
 
 namespace encryption {
     class IEncryptor {
@@ -17,6 +10,11 @@ namespace encryption {
         virtual byte *encrypt(Key *key, size_t size, byte *input) = 0;
 
         virtual byte *decrypt(Key *key, byte *input) = 0;
+
+    protected:
+        static byte *with_additional_bytes(byte *data, size_t size, size_t *new_size);
+
+        static State *get_states(byte *input, size_t size, size_t *additional_bytes, int *states_count);
     };
 }
 

@@ -4,6 +4,7 @@
 #define MAX_THREADS 10
 
 #include "../encryptor.hpp"
+#include "AES.hpp"
 
 namespace encryption {
     class CPUEncryptor : public IEncryptor {
