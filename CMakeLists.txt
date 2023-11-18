@@ -13,7 +13,6 @@ add_executable(rsa_gpu
         app/core/encryption/key.hpp
         app/libs/cargs/cargs.h
         app/libs/cargs/cargs.c
-        app/libs/biginteger/integer.h
         app/core/encryption/math_utils.cpp
         app/core/encryption/math_utils.hpp
         app/core/encryption/cpu/CPUEncryptor.cpp

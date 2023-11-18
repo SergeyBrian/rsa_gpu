@@ -3,12 +3,16 @@
 
 #define KEYSIZE 32
 
+#include <fstream>
+
 #include "math_utils.hpp"
 
 namespace encryption {
     class Key {
     public:
         Key();
+
+        explicit Key(std::ifstream &file);
 
         byte value[KEYSIZE] = {};
     };

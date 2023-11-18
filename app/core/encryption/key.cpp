@@ -12,5 +12,9 @@ namespace encryption {
             i = static_cast<byte>(dis(gen));
         }
     }
+
+    Key::Key(std::ifstream &file) {
+        file.read(reinterpret_cast<char *>(this->value), KEYSIZE);
+    }
 }
 

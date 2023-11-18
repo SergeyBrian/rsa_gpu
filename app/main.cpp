@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <CL/opencl.hpp>
 
@@ -102,17 +103,21 @@ int main(int argc, char **argv) {
         config.input_file_name = argv[context.index];
     }
 
+    encryption::CPUEncryptor encryptor = encryption::CPUEncryptor();
+    encryption::Key *key;
+
     if (config.gen_keys) {
-        encryption::CPUEncryptor encryptor = encryption::CPUEncryptor();
+        std::cout << "Generating key...\n";
+        key = new encryption::Key();
 
-        byte x[] = "ya ochen lublu sosat man cocks <3";
-
-        auto key = new encryption::Key();
-        byte *result = encryptor.encrypt(key, sizeof(x), x);
-        std::cout << "Encrypted: " << result << "\n";
-        byte *decrypted_result = encryptor.decrypt(key, result);
-        if (decrypted_result)
-            std::cout << "Decrypted: " << decrypted_result << "\n";
+        std::ofstream file(config.key_name, std::ios::binary);
+        file.write(reinterpret_cast<const char *>(key->value), KEYSIZE);
+        file.close();
+        std::cout << "Key written to file '" << config.key_name << "'\n";
+    } else {
+        std::ifstream file(config.key_name, std::ios::binary);
+        key = new encryption::Key(file);
+        file.close();
     }
 
     if (!config.input_file_name) {
@@ -124,7 +129,13 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // encrypt
+    byte x[] = "ya ochen lublu sosat man cocks <3";
+
+    byte *result = encryptor.encrypt(key, sizeof(x), x);
+    std::cout << "Encrypted: " << result << "\n";
+    byte *decrypted_result = encryptor.decrypt(key, result);
+    if (decrypted_result)
+        std::cout << "Decrypted: " << decrypted_result << "\n";
 
     return 0;
 }
