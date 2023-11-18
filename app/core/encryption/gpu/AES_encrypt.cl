@@ -1,6 +1,4 @@
-__kernel void doubleMatrix(__global unsigned char* matrix, const unsigned int size) {
+__kernel void doubleMatrix(__global unsigned char* matrix) {
     int id = get_global_id(0);
-    if (id < size) {
-        matrix[id] *= 2;
-    }
+    matrix[id] *= 2;
 }

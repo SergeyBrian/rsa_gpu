@@ -37,6 +37,7 @@ namespace encryption {
                 std::cerr << "Encrypt build log:\n" << buildLog << std::endl;
                 buildLog = this->AES_decrypt_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
                 std::cerr << "Decrypt build log:\n" << buildLog << std::endl;
+                exit(1);
             }
         } catch (const std::exception &e) {
             std::cerr << "OpenCL initialization error: " << e.what() << "\n";
@@ -50,26 +51,26 @@ namespace encryption {
         int states_count;
         State *states = get_states(input, size, &additional_bytes, &states_count);
 
-        for (int i = 0; i < states_count; i++) {
-            cl::Buffer bufferState(this->context, CL_MEM_READ_WRITE, SECTION_SIZE);
-            this->command_queue.enqueueWriteBuffer(
-                    bufferState,
-                    CL_TRUE,
-                    0,
-                    SECTION_SIZE,
-                    states[i]);
-            cl::Kernel kernel(this->AES_encrypt_program, "doubleMatrix");
-            kernel.setArg(0, bufferState);
-            kernel.setArg(1, SECTION_SIZE); // TODO: Захардкодить размер внутри OpenCL кода
-            this->command_queue.enqueueNDRangeKernel(kernel, cl::NullRange, SECTION_SIZE);
-            this->command_queue.finish();
-            this->command_queue.enqueueReadBuffer(
-                    bufferState,
-                    CL_TRUE,
-                    0,
-                    SECTION_SIZE,
-                    states[i]);
-        }
+        cl::Buffer statesBuffer(this->context, CL_MEM_READ_WRITE, SECTION_SIZE * states_count);
+        this->command_queue.enqueueWriteBuffer(
+                statesBuffer,
+                CL_TRUE,
+                0,
+                SECTION_SIZE * states_count,
+                *states);
+        cl::Kernel kernel(this->AES_encrypt_program, "doubleMatrix");
+        kernel.setArg(0, statesBuffer);
+        this->command_queue.enqueueNDRangeKernel(kernel,
+                                                 cl::NullRange,
+                                                 cl::NDRange(SECTION_SIZE * states_count),
+                                                 cl::NullRange);
+        this->command_queue.finish();
+        this->command_queue.enqueueReadBuffer(
+                statesBuffer,
+                CL_TRUE,
+                0,
+                SECTION_SIZE * states_count,
+                *states);
 
         auto output = new byte[size + additional_bytes + sizeof(size_t)];
 
@@ -108,27 +109,26 @@ namespace encryption {
                     (*state)[r][c] = input[state_offset + r + 4 * c];
                 }
             }
-
-
-            cl::Buffer bufferState(this->context, CL_MEM_READ_WRITE, SECTION_SIZE);
-            this->command_queue.enqueueWriteBuffer(
-                    bufferState,
-                    CL_TRUE,
-                    0,
-                    SECTION_SIZE,
-                    states[state_idx]);
-            cl::Kernel kernel(this->AES_decrypt_program, "unDoubleMatrix");
-            kernel.setArg(0, bufferState);
-            kernel.setArg(1, SECTION_SIZE); // TODO: Захардкодить размер внутри OpenCL кода
-            this->command_queue.enqueueNDRangeKernel(kernel, cl::NullRange, SECTION_SIZE);
-            this->command_queue.finish();
-            this->command_queue.enqueueReadBuffer(
-                    bufferState,
-                    CL_TRUE,
-                    0,
-                    SECTION_SIZE,
-                    states[state_idx]);
         }
+
+        cl::Buffer bufferState(this->context, CL_MEM_READ_WRITE, SECTION_SIZE * state_idx);
+
+        this->command_queue.enqueueWriteBuffer(
+                bufferState,
+                CL_TRUE,
+                0,
+                SECTION_SIZE * state_idx,
+                *states);
+        cl::Kernel kernel(this->AES_decrypt_program, "unDoubleMatrix");
+        kernel.setArg(0, bufferState);
+        this->command_queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(SECTION_SIZE * state_idx));
+        this->command_queue.finish();
+        this->command_queue.enqueueReadBuffer(
+                bufferState,
+                CL_TRUE,
+                0,
+                SECTION_SIZE * state_idx,
+                *states);
 
         // Копирует по правилу символы из дешифрованных секций в выходной массив
         for (int i = 0, state_offset = 0; i < state_idx; i++, state_offset += R * Nb) {
