@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <string.h>
 
 #include <CL/opencl.hpp>
 
@@ -146,8 +145,7 @@ int main(int argc, char **argv) {
     if (config.decrypt) {
         result = encryptor.decrypt(key, input_buffer.data());
         result_size = *result;
-        if (result)
-            std::cout << "Decrypted: " << result << "\n";
+        std::cout << "Decrypted: " << result << "\n";
     } else {
         result = encryptor.encrypt(key, size_input_file + 1, input_buffer.data());
         result_size = *result;
@@ -160,11 +158,7 @@ int main(int argc, char **argv) {
         std::string suffix_1 = ".decrypted";
         std::string suffix_2 = ".encrypted";
 
-        if (config.decrypt) {
-            suffix = suffix_1;
-        } else {
-            suffix = suffix_2;
-        }
+        suffix = (config.decrypt) ? suffix_1 : suffix_2;
 
         std::string file_name = config.input_file_name;
 
