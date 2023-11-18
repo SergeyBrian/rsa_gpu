@@ -136,8 +136,9 @@ int main(int argc, char **argv) {
 
     if (!input_file.read(reinterpret_cast<char *>(input_buffer.data()), size_input_file)) {
         std::cout << "Unable to read data from file. Exiting...\n";
-        return 0;
+        return 1;
     }
+    input_buffer.push_back(0);
 
     byte *result;
     size_t result_size;
@@ -145,7 +146,6 @@ int main(int argc, char **argv) {
     if (config.decrypt) {
         result = encryptor.decrypt(key, input_buffer.data());
         result_size = *result;
-//        result_size += sizeof(result_size);
         if (result)
             std::cout << "Decrypted: " << result << "\n";
     } else {
@@ -155,28 +155,24 @@ int main(int argc, char **argv) {
         std::cout << "Encrypted: " << result << "\n";
     }
 
-    if (config.output_file_name == nullptr) {
-
-        size_t output_file_name_size = strlen(config.input_file_name) + 11;
-
-        char *output_file_name = new char[output_file_name_size];
-
-        strcpy(output_file_name, config.input_file_name);
+    if (config.output_file_name) {
+        std::string suffix;
+        std::string suffix_1 = ".decrypted";
+        std::string suffix_2 = ".encrypted";
 
         if (config.decrypt) {
-            strcat(output_file_name, ".decrypted");
+            suffix = suffix_1;
         } else {
-            strcat(output_file_name, ".encrypted");
+            suffix = suffix_2;
         }
 
-        std::cout << "Creating " << output_file_name << " instead\n";
+        std::string file_name = config.input_file_name;
 
-        std::ofstream output_file(output_file_name, std::ios::binary);
+        std::cout << "Creating " << file_name + suffix << " instead\n";
 
+        std::ofstream output_file(file_name + suffix, std::ios::binary);
         output_file.write(reinterpret_cast<const char *>(result), result_size);
-
         output_file.close();
-        delete[] output_file_name;
     }
 
 
