@@ -10,7 +10,7 @@ namespace encryption {
     public:
         byte *encrypt(Key *key, size_t size, byte *input) override;
 
-        byte *decrypt(Key *key, size_t size, byte *input) override;
+        byte *decrypt(Key *key, byte *input) override;
     };
 }
 

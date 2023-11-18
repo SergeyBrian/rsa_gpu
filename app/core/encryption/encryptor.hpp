@@ -16,7 +16,7 @@ namespace encryption {
     public:
         virtual byte *encrypt(Key *key, size_t size, byte *input) = 0;
 
-        virtual byte *decrypt(Key *key, size_t size, byte *input) = 0;
+        virtual byte *decrypt(Key *key, byte *input) = 0;
     };
 }
 

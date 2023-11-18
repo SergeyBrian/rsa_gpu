@@ -109,10 +109,10 @@ int main(int argc, char **argv) {
 
         auto key = new encryption::Key();
         byte *result = encryptor.encrypt(key, sizeof(x), x);
-        // Должно вывести тот же текст, что и был введен, если не производилось шифрования. Иначе - зашифрованный текст
-        std::cout << result << "\n";
-        byte *decrypted_result = encryptor.decrypt(key, sizeof(result), result);
-        std::cout << decrypted_result << "\n";
+        std::cout << "Encrypted: " << result << "\n";
+        byte *decrypted_result = encryptor.decrypt(key, result);
+        if (decrypted_result)
+            std::cout << "Decrypted: " << decrypted_result << "\n";
     }
 
     if (!config.input_file_name) {
