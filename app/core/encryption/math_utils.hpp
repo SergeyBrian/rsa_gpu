@@ -15,7 +15,7 @@ using byte = unsigned char;
 using word = unsigned long long;
 
 namespace encryption::math {
-
+    void XOR(const byte *a, byte *b, size_t size);
 }
 
 #endif //RSA_GPU_MATH_UTILS_HPP

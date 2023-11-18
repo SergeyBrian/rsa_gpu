@@ -26,5 +26,7 @@ add_executable(rsa_gpu
         app/core/encryption/state.hpp
         app/core/encryption/gpu/opencl_loader.cpp
         app/core/encryption/gpu/opencl_loader.hpp
+        app/core/encryption/counter.hpp
+        app/core/encryption/counter.cpp
 )
 target_link_libraries(rsa_gpu OpenCL)

@@ -5,7 +5,9 @@
 #include "../state.hpp"
 
 namespace encryption {
-    void apply_xor(Key *key, State *state);
+    byte *encrypt_section(Key *key, byte *input);
+
+    byte *decrypt_section(Key *key, byte *input);
 }
 
 #endif //RSA_GPU_AES_HPP
