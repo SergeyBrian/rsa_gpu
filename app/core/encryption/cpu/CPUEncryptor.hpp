@@ -9,6 +9,8 @@ namespace encryption {
     class CPUEncryptor : public IEncryptor {
     public:
         byte *encrypt(Key *key, size_t size, byte *input) override;
+
+        byte *decrypt(Key *key, size_t size, byte *input) override;
     };
 }
 

@@ -7,8 +7,20 @@ using State = byte[R][Nb];
 
 
 namespace encryption {
+    void apply_xor(Key *key, State *state) {
+        for (int state_offset = 0; state_offset < KEYSIZE; state_offset += R * Nb) {
+            for (int r = 0; r < R; r++) {
+                for (int c = 0; c < Nb; c++) {
+                    (*state)[r][c] ^= key->value[state_offset + r + 4 * c];
+                }
+            }
+        }
+    }
+
     void encrypt_section(Key *key, State *state) {
         // Здесь по очереди вызываются все этапы шифрования
+        // В качестве примера добавлю шифрование через XOR
+        apply_xor(key, state);
     }
 
     byte *CPUEncryptor::encrypt(Key *key, size_t size, byte *input) {
@@ -50,5 +62,9 @@ namespace encryption {
         delete[] states;
 
         return output;
+    }
+
+    byte *CPUEncryptor::decrypt(Key *key, size_t size, byte *input) {
+        auto result = new byte[size];
     }
 }

@@ -107,9 +107,12 @@ int main(int argc, char **argv) {
 
         byte x[] = "ya ochen lublu sosat man cocks <3";
 
-        byte *result = encryptor.encrypt(nullptr, sizeof(x), x);
+        auto key = new encryption::Key();
+        byte *result = encryptor.encrypt(key, sizeof(x), x);
         // Должно вывести тот же текст, что и был введен, если не производилось шифрования. Иначе - зашифрованный текст
         std::cout << result << "\n";
+        byte *decrypted_result = encryptor.decrypt(key, sizeof(result), result);
+        std::cout << decrypted_result << "\n";
     }
 
     if (!config.input_file_name) {

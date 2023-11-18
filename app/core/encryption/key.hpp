@@ -10,7 +10,6 @@ namespace encryption {
     public:
         Key();
 
-    private:
         byte value[KEYSIZE] = {};
     };
 }
