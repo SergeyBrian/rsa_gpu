@@ -14,7 +14,7 @@
 namespace encryption {
     class IEncryptor {
     public:
-        virtual void encrypt(Key *key, size_t size, byte *dest, byte *src) = 0;
+        virtual byte *encrypt(Key *key, size_t size, byte *input) = 0;
     };
 }
 

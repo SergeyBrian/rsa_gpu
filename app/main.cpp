@@ -106,9 +106,10 @@ int main(int argc, char **argv) {
         encryption::CPUEncryptor encryptor = encryption::CPUEncryptor();
 
         byte x[] = "ya ochen lublu sosat man cocks <3";
-        byte y[1000];
 
-        encryptor.encrypt(nullptr, sizeof(x), x, y);
+        byte *result = encryptor.encrypt(nullptr, sizeof(x), x);
+        // Должно вывести тот же текст, что и был введен, если не производилось шифрования. Иначе - зашифрованный текст
+        std::cout << result << "\n";
     }
 
     if (!config.input_file_name) {
