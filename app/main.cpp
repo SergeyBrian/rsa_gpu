@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string.h>
 
 #include <CL/opencl.hpp>
 
@@ -121,21 +122,59 @@ int main(int argc, char **argv) {
     }
 
     if (!config.input_file_name) {
+        std::cout << "Input filename not specified. Exiting...\n";
         return 0;
     }
+
+    std::cout << "Reading data from file " << config.input_file_name << "\n";
+
+    std::ifstream input_file(config.input_file_name, std::ios::binary | std::ios::ate);
+    std::streamsize size_input_file = input_file.tellg();
+    input_file.seekg(0, std::ios::beg);
+
+    std::vector<byte> input_buffer(size_input_file);
+
+    if (!input_file.read(reinterpret_cast<char *>(input_buffer.data()), size_input_file)) {
+        std::cout << "Unable to read data from file. Exiting...\n";
+        return 1;
+    }
+    input_buffer.push_back(0);
+
+    byte *result;
+    size_t result_size;
 
     if (config.decrypt) {
-        // decrypt
-        return 0;
+        result = encryptor.decrypt(key, input_buffer.data());
+        result_size = *result;
+        if (result)
+            std::cout << "Decrypted: " << result << "\n";
+    } else {
+        result = encryptor.encrypt(key, size_input_file + 1, input_buffer.data());
+        result_size = *result;
+        result_size += sizeof(result_size);
+        std::cout << "Encrypted: " << result << "\n";
     }
 
-    byte x[] = "ya ochen lublu sosat man cocks <3";
+    if (config.output_file_name) {
+        std::string suffix;
+        std::string suffix_1 = ".decrypted";
+        std::string suffix_2 = ".encrypted";
 
-    byte *result = encryptor.encrypt(key, sizeof(x), x);
-    std::cout << "Encrypted: " << result << "\n";
-    byte *decrypted_result = encryptor.decrypt(key, result);
-    if (decrypted_result)
-        std::cout << "Decrypted: " << decrypted_result << "\n";
+        if (config.decrypt) {
+            suffix = suffix_1;
+        } else {
+            suffix = suffix_2;
+        }
+
+        std::string file_name = config.input_file_name;
+
+        std::cout << "Creating " << file_name + suffix << " instead\n";
+
+        std::ofstream output_file(file_name + suffix, std::ios::binary);
+        output_file.write(reinterpret_cast<const char *>(result), result_size);
+        output_file.close();
+    }
+
 
     return 0;
 }
