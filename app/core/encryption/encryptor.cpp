@@ -17,5 +17,6 @@ namespace encryption {
                                                 reinterpret_cast<const byte *>(counters),
                                                 size);
         aes->XOR(input, counters_encrypted, size);
+        delete[] counters_encrypted;
     }
 }

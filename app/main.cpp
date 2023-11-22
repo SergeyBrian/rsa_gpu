@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 #include <CL/opencl.hpp>
 
@@ -107,6 +108,7 @@ int main(int argc, char **argv) {
                 config.use_gpu = true;
                 break;
             case 'h':
+            default:
                 print_help();
                 return 0;
         }
@@ -182,6 +184,7 @@ int main(int argc, char **argv) {
         output_file = std::ofstream(config.output_file_name, std::ios::binary);
     }
 
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     size_t read_size = 0;
     size_t content_size = 0;
     if (!config.decrypt) {
@@ -202,7 +205,7 @@ int main(int argc, char **argv) {
 
         if (!content_size) {
             content_size = *reinterpret_cast<size_t *>(input_buffer.data());
-            last_write_size = MIN(buff_size, content_size) - sizeof(size_t);
+            last_write_size = MIN(buff_size - sizeof(size_t), content_size);
             output_file.write(reinterpret_cast<const char *>(input_buffer.data() + sizeof(size_t)),
                               last_write_size);
         } else {
@@ -216,6 +219,9 @@ int main(int argc, char **argv) {
         input_file.read(reinterpret_cast<char *>(input_buffer.data()), last_read_size);
         read_size += last_read_size;
     } while (content_size > 0);
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    std::cout << "Time spent: " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]\n";
 
     output_file.close();
     input_file.close();

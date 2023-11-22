@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "math_utils.hpp"
+#include "state.hpp"
 
 namespace encryption {
     class Key {
@@ -13,6 +14,8 @@ namespace encryption {
         Key();
 
         explicit Key(std::ifstream &file);
+
+        byte *expand();
 
         byte value[KEYSIZE] = {};
     };

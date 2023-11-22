@@ -16,5 +16,14 @@ namespace encryption {
     Key::Key(std::ifstream &file) {
         file.read(reinterpret_cast<char *>(this->value), KEYSIZE);
     }
+
+    byte *Key::expand() {
+        auto out = new byte[SECTION_SIZE * ROUNDS_COUNT];
+        // TODO: Написать нормальный алгоритм
+        for (int i = 0; i < SECTION_SIZE * ROUNDS_COUNT; i += KEYSIZE) {
+            std::memcpy(out + i, value, KEYSIZE);
+        }
+        return out;
+    }
 }
 

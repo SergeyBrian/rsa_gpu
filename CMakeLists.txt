@@ -32,3 +32,13 @@ add_executable(rsa_gpu
         app/core/encryption/AES/aes_backend.hpp
 )
 target_link_libraries(rsa_gpu OpenCL)
+
+file(GLOB_RECURSE CL_FILES "${CMAKE_SOURCE_DIR}/*.cl")
+
+foreach (CL_FILE ${CL_FILES})
+    get_filename_component(CL_FILENAME ${CL_FILE} NAME)
+
+    add_custom_command(TARGET rsa_gpu POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CL_FILE} ${CMAKE_CFG_INTDIR}/${CL_FILENAME})
+endforeach ()
