@@ -8,6 +8,7 @@
 #endif
 
 #define DIV_UP(x, y) ((x + y - 1) / y)
+#define MIN(x, y) ((x < y) ? x : y)
 
 using uint64 = uint64_t;
 using uint32 = uint32_t;

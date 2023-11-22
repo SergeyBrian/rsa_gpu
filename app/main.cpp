@@ -145,25 +145,22 @@ int main(int argc, char **argv) {
     input_file.seekg(0, std::ios::beg);
 
 
-    size_t buff_size;
-    if (size_input_file < MAX_INPUT_BUFFER) {
-        buff_size = size_input_file + (SECTION_SIZE - (size_input_file % SECTION_SIZE));
-    } else {
-        buff_size = MAX_INPUT_BUFFER;
-    }
-
     size_t old_size = size_input_file;
+    size_t extended_size;
     if (!config.decrypt) {
-        size_t real_size = size_input_file + sizeof(size_input_file);
-        real_size += SECTION_SIZE - (real_size % SECTION_SIZE);
+        extended_size = size_input_file + sizeof(size_input_file);
+        extended_size += SECTION_SIZE - (extended_size % SECTION_SIZE);
     } else {
+        extended_size = size_input_file;
         if (size_input_file % SECTION_SIZE) {
             std::cerr << "Invalid file size\n";
             return 1;
         }
     }
 
-    auto encryptor = encryption::Encryptor(config.use_gpu, DIV_UP(size_input_file, SECTION_SIZE), buff_size);
+    size_t buff_size = MIN(extended_size, MAX_INPUT_BUFFER);
+
+    auto encryptor = encryption::Encryptor(config.use_gpu, extended_size / SECTION_SIZE, buff_size);
 
     std::vector<byte> input_buffer(buff_size);
 
@@ -185,29 +182,40 @@ int main(int argc, char **argv) {
         output_file = std::ofstream(config.output_file_name, std::ios::binary);
     }
 
+    size_t read_size = 0;
+    size_t content_size = 0;
     if (!config.decrypt) {
-        *input_buffer.data() = old_size;
+        // Сохраняем размер изначального файла, соответственно считываем на sizeof(size_t) меньше
+        *reinterpret_cast<size_t *>(input_buffer.data()) = old_size;
         input_file.read(reinterpret_cast<char *>(input_buffer.data() + sizeof(size_input_file)),
                         buff_size - sizeof(size_input_file));
+        read_size += buff_size - sizeof(size_input_file);
+        content_size = extended_size;
     } else {
         input_file.read(reinterpret_cast<char *>(input_buffer.data()), buff_size);
+        read_size += buff_size;
     }
 
-    size_t total_size = 0;
     do {
         encryptor.apply(key, buff_size, input_buffer.data());
-        if (!config.decrypt)
-            output_file.write(reinterpret_cast<const char *>(input_buffer.data()), buff_size);
-        else {
-            if (!total_size) {
-                total_size = *input_buffer.data();
-            }
-            size_t write_size = (total_size < buff_size) ? total_size : buff_size;
+        size_t last_write_size;
+
+        if (!content_size) {
+            content_size = *reinterpret_cast<size_t *>(input_buffer.data());
+            last_write_size = MIN(buff_size, content_size) - sizeof(size_t);
             output_file.write(reinterpret_cast<const char *>(input_buffer.data() + sizeof(size_t)),
-                              write_size);
-            total_size -= write_size;
+                              last_write_size);
+        } else {
+            last_write_size = MIN(buff_size, content_size);
+            output_file.write(reinterpret_cast<const char *>(input_buffer.data()), last_write_size);
         }
-    } while (input_file.read(reinterpret_cast<char *>(input_buffer.data()), buff_size));
+        content_size -= last_write_size;
+
+
+        size_t last_read_size = MIN(buff_size, size_input_file - read_size);
+        input_file.read(reinterpret_cast<char *>(input_buffer.data()), last_read_size);
+        read_size += last_read_size;
+    } while (content_size > 0);
 
     output_file.close();
     input_file.close();
