@@ -5,7 +5,9 @@
 
 #include "libs/cargs/cargs.h"
 
-#include "core/encryption/cpu/CPUEncryptor.hpp"
+#include "core/encryption/encryptor.hpp"
+
+#define MAX_INPUT_BUFFER 1_GB
 
 static struct cag_option options[] = {
         {
@@ -14,6 +16,13 @@ static struct cag_option options[] = {
                 .access_name="gen-key",
                 .value_name=nullptr,
                 .description="Generate private key",
+        },
+        {
+                .identifier='G',
+                .access_letters="G",
+                .access_name="GPU",
+                .value_name=nullptr,
+                .description="Use gpu acceleration",
         },
         {
                 .identifier='k',
@@ -51,6 +60,7 @@ struct configuration {
     bool decrypt;
     const char *input_file_name;
     const char *output_file_name;
+    bool use_gpu;
 };
 
 void print_help() {
@@ -93,6 +103,9 @@ int main(int argc, char **argv) {
             case 'o':
                 config.output_file_name = cag_option_get_value(&context);
                 break;
+            case 'G':
+                config.use_gpu = true;
+                break;
             case 'h':
                 print_help();
                 return 0;
@@ -103,7 +116,6 @@ int main(int argc, char **argv) {
         config.input_file_name = argv[context.index];
     }
 
-    encryption::CPUEncryptor encryptor = encryption::CPUEncryptor();
     encryption::Key *key;
 
     if (config.gen_keys) {
@@ -121,54 +133,84 @@ int main(int argc, char **argv) {
     }
 
     if (!config.input_file_name) {
-        std::cout << "Input filename not specified. Exiting...\n";
         return 0;
     }
 
     std::cout << "Reading data from file " << config.input_file_name << "\n";
 
-    std::ifstream input_file(config.input_file_name, std::ios::binary | std::ios::ate);
-    std::streamsize size_input_file = input_file.tellg();
+    std::ifstream input_file(config.input_file_name, std::ifstream::binary | std::ifstream::ate);
+    size_t size_input_file = input_file.tellg();
+    input_file.clear();
+    input_file.seekg(0, std::ios_base::beg);
     input_file.seekg(0, std::ios::beg);
 
-    std::vector<byte> input_buffer(size_input_file);
 
-    if (!input_file.read(reinterpret_cast<char *>(input_buffer.data()), size_input_file)) {
-        std::cout << "Unable to read data from file. Exiting...\n";
-        return 1;
-    }
-    input_buffer.push_back(0);
-
-    byte *result;
-    size_t result_size;
-
-    if (config.decrypt) {
-        result = encryptor.decrypt(key, input_buffer.data());
-        result_size = *result;
-        std::cout << "Decrypted: " << result << "\n";
+    size_t buff_size;
+    if (size_input_file < MAX_INPUT_BUFFER) {
+        buff_size = size_input_file + (SECTION_SIZE - (size_input_file % SECTION_SIZE));
     } else {
-        result = encryptor.encrypt(key, size_input_file + 1, input_buffer.data());
-        result_size = *result;
-        result_size += sizeof(result_size);
-        std::cout << "Encrypted: " << result << "\n";
+        buff_size = MAX_INPUT_BUFFER;
     }
 
-    if (config.output_file_name) {
-        std::string suffix;
-        std::string suffix_1 = ".decrypted";
-        std::string suffix_2 = ".encrypted";
+    size_t old_size = size_input_file;
+    if (!config.decrypt) {
+        size_t real_size = size_input_file + sizeof(size_input_file);
+        real_size += SECTION_SIZE - (real_size % SECTION_SIZE);
+    } else {
+        if (size_input_file % SECTION_SIZE) {
+            std::cerr << "Invalid file size\n";
+            return 1;
+        }
+    }
 
-        suffix = (config.decrypt) ? suffix_1 : suffix_2;
+    auto encryptor = encryption::Encryptor(config.use_gpu, DIV_UP(size_input_file, SECTION_SIZE), buff_size);
 
+    std::vector<byte> input_buffer(buff_size);
+
+    std::ofstream output_file;
+    if (!config.output_file_name) {
         std::string file_name = config.input_file_name;
+        std::string enc_extension = ".encrypted";
 
-        std::cout << "Creating " << file_name + suffix << " instead\n";
+        if (!config.decrypt) {
+            file_name += enc_extension;
+        } else {
+            size_t i = file_name.find(enc_extension);
+            if (i != std::string::npos)
+                file_name.erase(i, enc_extension.length());
+        }
 
-        std::ofstream output_file(file_name + suffix, std::ios::binary);
-        output_file.write(reinterpret_cast<const char *>(result), result_size);
-        output_file.close();
+        output_file = std::ofstream(file_name, std::ios::binary);
+    } else {
+        output_file = std::ofstream(config.output_file_name, std::ios::binary);
     }
 
+    if (!config.decrypt) {
+        *input_buffer.data() = old_size;
+        input_file.read(reinterpret_cast<char *>(input_buffer.data() + sizeof(size_input_file)),
+                        buff_size - sizeof(size_input_file));
+    } else {
+        input_file.read(reinterpret_cast<char *>(input_buffer.data()), buff_size);
+    }
+
+    size_t total_size = 0;
+    do {
+        encryptor.apply(key, buff_size, input_buffer.data());
+        if (!config.decrypt)
+            output_file.write(reinterpret_cast<const char *>(input_buffer.data()), buff_size);
+        else {
+            if (!total_size) {
+                total_size = *input_buffer.data();
+            }
+            size_t write_size = (total_size < buff_size) ? total_size : buff_size;
+            output_file.write(reinterpret_cast<const char *>(input_buffer.data() + sizeof(size_t)),
+                              write_size);
+            total_size -= write_size;
+        }
+    } while (input_file.read(reinterpret_cast<char *>(input_buffer.data()), buff_size));
+
+    output_file.close();
+    input_file.close();
 
     return 0;
 }

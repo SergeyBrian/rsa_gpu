@@ -16,17 +16,19 @@ add_executable(rsa_gpu
         app/libs/cargs/cargs.c
         app/core/encryption/math_utils.cpp
         app/core/encryption/math_utils.hpp
-        app/core/encryption/cpu/CPUEncryptor.cpp
-        app/core/encryption/cpu/CPUEncryptor.hpp
-        app/core/encryption/gpu/GPUEncryptor.cpp
-        app/core/encryption/gpu/GPUEncryptor.hpp
-        app/core/encryption/cpu/AES.cpp
-        app/core/encryption/cpu/AES.hpp
         app/core/encryption/state.cpp
         app/core/encryption/state.hpp
-        app/core/encryption/gpu/opencl_loader.cpp
-        app/core/encryption/gpu/opencl_loader.hpp
+        app/core/encryption/AES/gpu/opencl_loader.cpp
+        app/core/encryption/AES/gpu/opencl_loader.hpp
         app/core/encryption/counter.hpp
         app/core/encryption/counter.cpp
+        app/core/encryption/AES/aes.cpp
+        app/core/encryption/AES/aes.hpp
+        app/core/encryption/AES/gpu/aesgpu_backend.cpp
+        app/core/encryption/AES/gpu/aesgpu_backend.hpp
+        app/core/encryption/AES/cpu/aescpu_backend.cpp
+        app/core/encryption/AES/cpu/aescpu_backend.hpp
+        app/core/encryption/AES/aes_backend.cpp
+        app/core/encryption/AES/aes_backend.hpp
 )
 target_link_libraries(rsa_gpu OpenCL)
