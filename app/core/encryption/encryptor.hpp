@@ -1,22 +1,19 @@
 #ifndef RSA_GPU_ENCRYPTOR_HPP
 #define RSA_GPU_ENCRYPTOR_HPP
 
-#define BLOCK_SIZE 16
-#define SECTION_SIZE 16
-
-#define R 4
-#define Nb 4
-#define Nk 8
-#define Nr 14
-
 #include "key.hpp"
+#include "state.hpp"
+#include "AES/aes.hpp"
+#include "counter.hpp"
 
 namespace encryption {
-    class IEncryptor {
+    class Encryptor {
+        aes::AES *aes;
+        counter::Counter *counter;
     public:
-        virtual byte *encrypt(Key *key, size_t size, byte *input) = 0;
+        Encryptor(bool use_gpu, unsigned long long block_count, size_t buff_size);
 
-        virtual byte *decrypt(Key *key, byte *input) = 0;
+        void apply(Key *key, size_t size, byte *input);
     };
 }
 
