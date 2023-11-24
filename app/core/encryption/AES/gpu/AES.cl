@@ -1,12 +1,12 @@
 __kernel void loadStates(__global unsigned char *states, __global unsigned char *input) {
     int r = get_global_id(0);
-    int c = get_local_id(1);
+    int c = get_global_id(1);
     states[r * 4 + c] = input[r + c * 4];
 }
 
 __kernel void unloadStates(__global unsigned char *states, __global unsigned char *result) {
-    int r = get_global_id(0);
-    int c = get_local_id(0);
+    int c = get_global_id(0);
+    int r = get_global_id(1);
     result[r + c * 4] = states[r * 4 + c];
 }
 
