@@ -1,6 +1,7 @@
 __kernel void loadStates(__global unsigned char *states, __global unsigned char *input) {
     int r = get_global_id(0);
     int c = get_global_id(1);
+    printf("%d %d\n", r, c);
     states[r * 4 + c] = input[r + c * 4];
 }
 

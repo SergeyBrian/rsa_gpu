@@ -131,8 +131,7 @@ void AESGPUBackend::load_states(const byte *input, size_t size) {
     size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_LOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(blocks_count * 4, 4),
-                                       cl::NDRange(4, 1));
+                                       cl::NDRange(blocks_count * 4, 4));
 }
 
 byte *AESGPUBackend::unload_states(size_t size) {
@@ -142,8 +141,7 @@ byte *AESGPUBackend::unload_states(size_t size) {
     size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_UNLOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(blocks_count * 4, 4),
-                                       cl::NDRange(4, 1));
+                                       cl::NDRange(blocks_count * 4, 4));
     command_queue.finish();
     auto result = new byte[size];
     command_queue.enqueueReadBuffer(result_buf, CL_TRUE, 0, size, result);
