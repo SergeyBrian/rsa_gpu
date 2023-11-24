@@ -1,7 +1,7 @@
 __kernel void loadStates(__global unsigned char *states, __global unsigned char *input) {
     int r = get_global_id(0);
-    int c = get_local_id(0);
-    input[r * 4 + c] = states[r + c * 4];
+    int c = get_local_id(1);
+    states[r * 4 + c] = input[r + c * 4];
 }
 
 __kernel void unloadStates(__global unsigned char *states, __global unsigned char *result) {

@@ -71,6 +71,9 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
 
     load_states(input, size);
     byte *round_keys = key->expand();
+    auto xx = new byte[size];
+    command_queue.enqueueReadBuffer(states, CL_TRUE, 0, size, xx);
+    command_queue.finish();
     command_queue.enqueueWriteBuffer(RoundKeys,
                                      CL_TRUE,
                                      0,
@@ -125,20 +128,22 @@ void AESGPUBackend::load_states(const byte *input, size_t size) {
     command_queue.enqueueWriteBuffer(input_buf, CL_TRUE, 0, size, input);
     kernel[KF_LOAD_STATES].setArg(0, states);
     kernel[KF_LOAD_STATES].setArg(1, input_buf);
+    size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_LOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(ROWS * (size / SECTION_SIZE)),
-                                       cl::NDRange(COLS));
+                                       cl::NDRange(blocks_count * 4, 4),
+                                       cl::NDRange(4, 1));
 }
 
 byte *AESGPUBackend::unload_states(size_t size) {
     cl::Buffer result_buf(context, CL_MEM_HOST_READ_ONLY, size);
-    kernel[KF_UNLOAD_STATES].setArg(0, result_buf);
-    kernel[KF_UNLOAD_STATES].setArg(1, states);
+    kernel[KF_UNLOAD_STATES].setArg(0, states);
+    kernel[KF_UNLOAD_STATES].setArg(1, result_buf);
+    size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_UNLOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(ROWS * (size / SECTION_SIZE)),
-                                       cl::NDRange(COLS));
+                                       cl::NDRange(blocks_count * 4, 4),
+                                       cl::NDRange(4, 1));
     command_queue.finish();
     auto result = new byte[size];
     command_queue.enqueueReadBuffer(result_buf, CL_TRUE, 0, size, result);
