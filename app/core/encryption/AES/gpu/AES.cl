@@ -50,12 +50,12 @@ __kernel void shiftRows(__global unsigned char *row, int len) {
 }
 
 __kernel void mixColumns(__global unsigned char *bytes, __global unsigned char *GF28, int len) {
-    unsigned char B = 0;
+    unsigned char sum = 0;
     int id = get_global_id(0);
-    for (int i = 0; i < len; i++) {
-        B += bytes[id * len + i];
+    int i;
+    for (i = 0; i < len; i++) {
+        sum += bytes[id * len + i] * GF28[id * 4 + i];
     }
-    for (int i = 0; i < len; i++) {
-        bytes[id * len + i] = B * GF28[i];
-    }
+
+    bytes[id * len + i] = sum;
 }

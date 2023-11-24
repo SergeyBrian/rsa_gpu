@@ -10,7 +10,7 @@ namespace encryption::aes {
     extern const byte SBox[256];
     extern const byte InvSBox[256];
     extern const byte RCon[11][4];
-    extern const byte GF28[4];
+    extern const byte GF28[4][4];
 
     class AESBackend {
     public:
