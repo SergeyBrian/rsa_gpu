@@ -35,7 +35,6 @@ AESGPUBackend::AESGPUBackend() {
     std::cout << "Using GPU device " << device.getInfo<CL_DEVICE_NAME>() << "\n";
     SBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::SBox));
     InvSBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::InvSBox));
-/*    RCon = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::RCon));*/
     RoundKeys = cl::Buffer(context, CL_MEM_READ_WRITE, SECTION_SIZE * ROUNDS_COUNT);
     GF28 = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::GF28));
     command_queue.enqueueWriteBuffer(SBox,
@@ -48,11 +47,6 @@ AESGPUBackend::AESGPUBackend() {
                                      0,
                                      sizeof(encryption::aes::InvSBox),
                                      encryption::aes::InvSBox);
-/*    command_queue.enqueueWriteBuffer(RCon,
-                                     CL_TRUE,
-                                     0,
-                                     sizeof(encryption::aes::RCon),
-                                     encryption::aes::RCon);*/
     command_queue.enqueueWriteBuffer(GF28,
                                      CL_TRUE,
                                      0,
