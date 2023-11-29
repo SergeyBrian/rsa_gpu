@@ -35,7 +35,6 @@ AESGPUBackend::AESGPUBackend() {
     std::cout << "Using GPU device " << device.getInfo<CL_DEVICE_NAME>() << "\n";
     SBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::SBox));
     InvSBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::InvSBox));
-    RCon = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::RCon));
     RoundKeys = cl::Buffer(context, CL_MEM_READ_WRITE, SECTION_SIZE * ROUNDS_COUNT);
     GF28 = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::GF28));
     command_queue.enqueueWriteBuffer(SBox,
@@ -48,11 +47,6 @@ AESGPUBackend::AESGPUBackend() {
                                      0,
                                      sizeof(encryption::aes::InvSBox),
                                      encryption::aes::InvSBox);
-    command_queue.enqueueWriteBuffer(RCon,
-                                     CL_TRUE,
-                                     0,
-                                     sizeof(encryption::aes::RCon),
-                                     encryption::aes::RCon);
     command_queue.enqueueWriteBuffer(GF28,
                                      CL_TRUE,
                                      0,
@@ -74,12 +68,12 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
     command_queue.enqueueWriteBuffer(RoundKeys,
                                      CL_TRUE,
                                      0,
-                                     SECTION_SIZE * ROUNDS_COUNT,
+                                     SECTION_SIZE * (ROUNDS_COUNT + 1),
                                      round_keys);
 
     KeyXOR(states, RoundKeys, 0, size);
 
-    for (int round_idx = 1; round_idx < ROUNDS_COUNT - 1; round_idx++) {
+    for (int round_idx = 1; round_idx < ROUNDS_COUNT; round_idx++) {
         sub_bytes(states, size);
         shift_rows(states, size, COLS);
         mix_columns(states, size);
