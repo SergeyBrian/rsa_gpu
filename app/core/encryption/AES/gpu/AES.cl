@@ -25,14 +25,14 @@ __kernel void KeyXOR(__global unsigned char *bytes,
                      int offset,
                      unsigned int key_size) {
     int id = get_global_id(0);
-    bytes[id] ^= key[offset + id % key_size];
+    bytes[id] ^= key[offset * key_size + id % key_size];
 }
 
 __kernel void subBytes(__global unsigned char *bytes,
                        __global unsigned char *SBox,
                        __global unsigned char *InvSBox) {
     int id = get_global_id(0);
-    bytes[id] = InvSBox[SBox[bytes[id]]];
+    bytes[id] = SBox[bytes[id]];
 }
 
 __kernel void shiftRows(__global unsigned char *row, int len) {
@@ -49,12 +49,12 @@ __kernel void shiftRows(__global unsigned char *row, int len) {
 }
 
 __kernel void mixColumns(__global unsigned char *bytes, __global unsigned char *GF28, int len) {
-    unsigned char sum = 0;
-    int id = get_global_id(0);
-    int i;
-    for (i = 0; i < len; i++) {
-        sum += bytes[id * len + i] * GF28[id * 4 + i];
+    int col = get_global_id(0);
+    for (int row = 0; row < 4; row++) {
+        unsigned char sum = 0;
+        for (int i = 0; i < 4; i++) {
+            sum += bytes[col + i * 4] * GF28[(col % 4) * 4 + i];
+        }
+        bytes[row * 4 + col] = sum;
     }
-
-    bytes[id * len + i] = sum;
 }
