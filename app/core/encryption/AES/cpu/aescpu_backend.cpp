@@ -76,10 +76,10 @@ void AESCPUBackend::shiftRows(byte (*state)[ROWS]) {
 }
 
 void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
-    byte sum = 0;
 
     for (int col = 0; col < COLS; col++) {
         for (int row_GF = 0; row_GF < ROWS; row_GF++) {
+            byte sum = 0;
             for (int row = 0; row < ROWS; row++) {
                 sum += state[row][col] * encryption::aes::GF28[col][row];
             }
