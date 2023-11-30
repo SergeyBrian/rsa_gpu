@@ -4,7 +4,17 @@
 #include "../aes_backend.hpp"
 
 class AESCPUBackend : public encryption::aes::AESBackend {
+
+    void addRoundKey(byte state[ROWS][COLS], byte *round_key);
+
+    static void subBytes(byte state[ROWS][COLS]);
+
+    static void shiftRows(byte state[ROWS][COLS]);
+
+    static void mixColumns(byte state[ROWS][COLS]);
+
 public:
+
     AESCPUBackend();
 
     byte *encrypt(encryption::Key *key,
