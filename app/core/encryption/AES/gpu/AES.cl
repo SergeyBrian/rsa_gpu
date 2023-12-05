@@ -1,13 +1,11 @@
 __kernel void loadStates(__global unsigned char *states, __global unsigned char *input) {
-    int r = get_global_id(0);
-    int c = get_global_id(1);
-    states[r * 4 + c] = input[r + c * 4];
+    int id = get_global_id(0);
+    states[id] = input[(id / 16) * 16 + (id % 4) * 4 + ((id % 16) / 4)];
 }
 
 __kernel void unloadStates(__global unsigned char *states, __global unsigned char *result) {
-    int c = get_global_id(0);
-    int r = get_global_id(1);
-    result[r + c * 4] = states[r * 4 + c];
+    int id = get_global_id(0);
+    result[(id / 16) * 16 + (id % 4) * 4 + ((id % 16) / 4)] = states[id];
 }
 
 __kernel void doubleMatrix(__global unsigned char *matrix) {
@@ -25,7 +23,7 @@ __kernel void KeyXOR(__global unsigned char *bytes,
                      int offset,
                      unsigned int key_size) {
     int id = get_global_id(0);
-    bytes[id] ^= key[offset * key_size + id % key_size];
+    bytes[id] ^= key[offset * key_size + (id % 4) * 4 + ((id % key_size) / 4)];
 }
 
 __kernel void subBytes(__global unsigned char *bytes,
@@ -49,12 +47,18 @@ __kernel void shiftRows(__global unsigned char *row, int len) {
 }
 
 __kernel void mixColumns(__global unsigned char *bytes, __global unsigned char *GF28, int len) {
-    int col = get_global_id(0);
-    for (int row = 0; row < 4; row++) {
-        unsigned char sum = 0;
-        for (int i = 0; i < 4; i++) {
-            sum += bytes[col + i * 4] * GF28[(col % 4) * 4 + i];
+    unsigned char tmpColumn[4];
+    int id = get_global_id(0);
+    for (int col = 0; col < 4; col++) {
+        for (int row_GF = 0; row_GF < 4; row_GF++) {
+            tmpColumn[row_GF] = 0;
+            for (int col_GF = 0; col_GF < 4; col_GF++) {
+                tmpColumn[row_GF] += bytes[id * 16 + col + col_GF * 4] * GF28[row_GF * 4 + col_GF];
+            }
         }
-        bytes[row * 4 + col] = sum;
+
+        for (int row = 0; row < 4; row++) {
+            bytes[id * 16 + col + row * 4] = tmpColumn[row];
+        }
     }
 }

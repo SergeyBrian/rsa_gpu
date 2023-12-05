@@ -47,9 +47,11 @@ void AESCPUBackend::XOR(byte *a, const byte *b, size_t size) {
     }
 }
 
-void AESCPUBackend::addRoundKey(byte (*state)[ROWS], byte *round_key) {
-    for (int row = 0; row < COLS; row++) {
-        XOR(state[row], round_key + COLS * row, ROWS);
+void AESCPUBackend::addRoundKey(byte (*state)[ROWS], const byte *round_key) {
+    for (int col = 0; col < COLS; col++) {
+        for (int row = 0; row < ROWS; row++) {
+            state[row][col] ^= *(round_key + col * COLS + row);
+        }
     }
 }
 
@@ -76,14 +78,19 @@ void AESCPUBackend::shiftRows(byte (*state)[ROWS]) {
 }
 
 void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
+    byte tmpColumn[ROWS];
 
     for (int col = 0; col < COLS; col++) {
         for (int row_GF = 0; row_GF < ROWS; row_GF++) {
-            byte sum = 0;
-            for (int row = 0; row < ROWS; row++) {
-                sum += state[row][col] * encryption::aes::GF28[col][row];
+            tmpColumn[row_GF] = 0;
+            for (int col_GF = 0; col_GF < COLS; col_GF++) {
+                tmpColumn[row_GF] += state[col_GF][col] * encryption::aes::GF28[row_GF][col_GF];
             }
-            state[row_GF][col] = sum;
+        }
+
+        for (int row = 0; row < ROWS; row++) {
+            state[row][col] = tmpColumn[row];
         }
     }
+
 }

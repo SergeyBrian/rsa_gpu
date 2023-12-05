@@ -71,6 +71,11 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
                                      SECTION_SIZE * (ROUNDS_COUNT + 1),
                                      round_keys);
 
+/*    command_queue.finish();
+    auto xxx = new byte[size];
+    command_queue.enqueueReadBuffer(states, CL_TRUE, 0, size, xxx);*/
+
+
     KeyXOR(states, RoundKeys, 0, size);
 
     for (int round_idx = 1; round_idx < ROUNDS_COUNT; round_idx++) {
@@ -126,7 +131,7 @@ void AESGPUBackend::load_states(const byte *input, size_t size) {
     size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_LOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(blocks_count * 4, 4));
+                                       cl::NDRange(size));
 }
 
 byte *AESGPUBackend::unload_states(size_t size) {
@@ -136,7 +141,7 @@ byte *AESGPUBackend::unload_states(size_t size) {
     size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_UNLOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(blocks_count * 4, 4));
+                                       cl::NDRange(size));
     command_queue.finish();
     auto result = new byte[size];
     command_queue.enqueueReadBuffer(result_buf, CL_TRUE, 0, size, result);
@@ -165,5 +170,5 @@ void AESGPUBackend::mix_columns(const cl::Buffer &bytes, size_t size) {
     kernel[KF_MIX_COLUMNS].setArg(2, COLS);
     command_queue.enqueueNDRangeKernel(kernel[KF_MIX_COLUMNS],
                                        cl::NullRange,
-                                       cl::NDRange(size / ROWS));
+                                       cl::NDRange(size / 16));
 }

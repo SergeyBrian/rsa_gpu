@@ -5,7 +5,7 @@
 
 class AESCPUBackend : public encryption::aes::AESBackend {
 
-    void addRoundKey(byte state[ROWS][COLS], byte *round_key);
+    static void addRoundKey(byte state[ROWS][COLS], const byte *round_key);
 
     static void subBytes(byte state[ROWS][COLS]);
 
