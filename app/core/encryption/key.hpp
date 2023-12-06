@@ -10,6 +10,10 @@
 
 namespace encryption {
     class Key {
+        static void RotWord(byte* word);
+
+        static void SubWord(byte* word);
+
     public:
         Key();
 

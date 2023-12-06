@@ -35,8 +35,7 @@ AESGPUBackend::AESGPUBackend() {
     std::cout << "Using GPU device " << device.getInfo<CL_DEVICE_NAME>() << "\n";
     SBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::SBox));
     InvSBox = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::InvSBox));
-    RCon = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::RCon));
-    RoundKeys = cl::Buffer(context, CL_MEM_READ_WRITE, SECTION_SIZE * ROUNDS_COUNT);
+    RoundKeys = cl::Buffer(context, CL_MEM_READ_WRITE, SECTION_SIZE * (ROUNDS_COUNT + 1));
     GF28 = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(encryption::aes::GF28));
     command_queue.enqueueWriteBuffer(SBox,
                                      CL_TRUE,
@@ -48,11 +47,6 @@ AESGPUBackend::AESGPUBackend() {
                                      0,
                                      sizeof(encryption::aes::InvSBox),
                                      encryption::aes::InvSBox);
-    command_queue.enqueueWriteBuffer(RCon,
-                                     CL_TRUE,
-                                     0,
-                                     sizeof(encryption::aes::RCon),
-                                     encryption::aes::RCon);
     command_queue.enqueueWriteBuffer(GF28,
                                      CL_TRUE,
                                      0,
@@ -74,8 +68,13 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
     command_queue.enqueueWriteBuffer(RoundKeys,
                                      CL_TRUE,
                                      0,
-                                     SECTION_SIZE * ROUNDS_COUNT,
+                                     SECTION_SIZE * (ROUNDS_COUNT + 1),
                                      round_keys);
+
+/*    command_queue.finish();
+    auto xxx = new byte[size];
+    command_queue.enqueueReadBuffer(states, CL_TRUE, 0, size, xxx);*/
+
 
     KeyXOR(states, RoundKeys, 0, size);
 
@@ -85,6 +84,10 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
         mix_columns(states, size);
         KeyXOR(states, RoundKeys, round_idx, size);
     }
+
+    sub_bytes(states, size);
+    shift_rows(states, size, COLS);
+    KeyXOR(states, RoundKeys, ROUNDS_COUNT, size);
 
     command_queue.finish();
     delete[] round_keys;
@@ -125,20 +128,20 @@ void AESGPUBackend::load_states(const byte *input, size_t size) {
     command_queue.enqueueWriteBuffer(input_buf, CL_TRUE, 0, size, input);
     kernel[KF_LOAD_STATES].setArg(0, states);
     kernel[KF_LOAD_STATES].setArg(1, input_buf);
+    size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_LOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(ROWS * (size / SECTION_SIZE)),
-                                       cl::NDRange(COLS));
+                                       cl::NDRange(size));
 }
 
 byte *AESGPUBackend::unload_states(size_t size) {
     cl::Buffer result_buf(context, CL_MEM_HOST_READ_ONLY, size);
-    kernel[KF_UNLOAD_STATES].setArg(0, result_buf);
-    kernel[KF_UNLOAD_STATES].setArg(1, states);
+    kernel[KF_UNLOAD_STATES].setArg(0, states);
+    kernel[KF_UNLOAD_STATES].setArg(1, result_buf);
+    size_t blocks_count = size / SECTION_SIZE;
     command_queue.enqueueNDRangeKernel(kernel[KF_UNLOAD_STATES],
                                        cl::NullRange,
-                                       cl::NDRange(ROWS * (size / SECTION_SIZE)),
-                                       cl::NDRange(COLS));
+                                       cl::NDRange(size));
     command_queue.finish();
     auto result = new byte[size];
     command_queue.enqueueReadBuffer(result_buf, CL_TRUE, 0, size, result);
@@ -167,5 +170,5 @@ void AESGPUBackend::mix_columns(const cl::Buffer &bytes, size_t size) {
     kernel[KF_MIX_COLUMNS].setArg(2, COLS);
     command_queue.enqueueNDRangeKernel(kernel[KF_MIX_COLUMNS],
                                        cl::NullRange,
-                                       cl::NDRange(size / COLS));
+                                       cl::NDRange(size / 16));
 }

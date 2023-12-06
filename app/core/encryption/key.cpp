@@ -1,4 +1,5 @@
 #include "key.hpp"
+#include "AES/aes_backend.hpp"
 
 #include <random>
 
@@ -18,12 +19,45 @@ namespace encryption {
     }
 
     byte *Key::expand() {
-        auto out = new byte[SECTION_SIZE * ROUNDS_COUNT];
-        // TODO: Написать нормальный алгоритм
-        for (int i = 0; i < SECTION_SIZE * ROUNDS_COUNT; i += KEYSIZE) {
-            std::memcpy(out + i, value, KEYSIZE);
+        auto round_keys = new byte[SECTION_SIZE * (ROUNDS_COUNT + 1)];
+
+        // Копирование исходного ключа (первые два раундовых ключа)
+        std::memcpy(round_keys, value, KEYSIZE);
+
+        // Генерация ещё 13 раундовых ключей поблочно (1 блок 4х4 байта на итерацию цикла)
+        for (int i = KEYSIZE; i < SECTION_SIZE * (ROUNDS_COUNT + 1); i += sizeof(word)) {
+            auto temp = new byte[sizeof(word)];
+            std::copy(round_keys + i - sizeof(word), round_keys + i, temp);
+
+            if (i % KEYSIZE == 0) {
+                RotWord(temp);
+                SubWord(temp);
+                temp[0] ^= aes::RCon[i / KEYSIZE - 1];
+            } else if (i % KEYSIZE == KEYSIZE / 2) {
+                SubWord(temp);
+            }
+
+            for (int j = 0; j < sizeof(word); ++j) {
+                round_keys[i + j] = round_keys[i + j - KEYSIZE] ^ temp[j];
+            }
         }
-        return out;
+
+        // В итоге массив из 15 раундовых ключей
+        return round_keys;
+    }
+
+    void Key::RotWord(byte* word) {
+        byte tmp = word[0];
+        word[0] = word[1];
+        word[1] = word[2];
+        word[2] = word[3];
+        word[3] = tmp;
+    }
+
+    void Key::SubWord(byte* word) {
+        for (int i = 0; i < sizeof(word); ++i) {
+            word[i] = aes::SBox[word[i]];
+        }
     }
 }
 
