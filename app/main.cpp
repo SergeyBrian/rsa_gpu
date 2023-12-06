@@ -2,8 +2,6 @@
 #include <fstream>
 #include <chrono>
 
-#include <CL/opencl.hpp>
-
 #include "libs/cargs/cargs.h"
 
 #include "core/encryption/encryptor.hpp"

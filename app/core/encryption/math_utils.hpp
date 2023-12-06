@@ -1,9 +1,10 @@
 #ifndef RSA_GPU_MATH_UTILS_HPP
 #define RSA_GPU_MATH_UTILS_HPP
 
-#ifdef WIN32
+#ifndef WIN32
 
 #include <cstdint>
+#include <cstddef>
 
 #endif
 
@@ -17,7 +18,7 @@ using uint8 = uint8_t;
 using byte = unsigned char;
 using word = unsigned int;
 
-inline auto operator ""_GB(size_t const x) { return 1024 * 1024 * 1024 * x; }
+inline auto operator ""_GB(unsigned long long const x) { return 1024 * 1024 * 1024 * x; }
 
 namespace encryption::math {
     void XOR(const byte *a, byte *b, size_t size);
