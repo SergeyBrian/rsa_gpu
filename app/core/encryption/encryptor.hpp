@@ -11,7 +11,7 @@ namespace encryption {
         aes::AES *aes;
         counter::Counter *counter;
     public:
-        Encryptor(bool use_gpu, unsigned long long block_count, size_t buff_size);
+        Encryptor(aes::gpu_mode mode, unsigned long long block_count, size_t buff_size);
 
         void apply(Key *key, size_t size, byte *input);
     };

@@ -19,6 +19,7 @@ namespace encryption::counter {
         this->iteration = 0;
         counters = new byte[blocks_per_buff * SECTION_SIZE];
         std::memcpy(counters, init_str.c_str(), NONCE_SIZE);
+        std::memset(counters, 0, buff_size);
     }
 
 

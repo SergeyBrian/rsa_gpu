@@ -7,6 +7,12 @@
 #include "../key.hpp"
 
 namespace encryption::aes {
+    enum gpu_mode {
+        CPU,
+        DEFAULT,
+        PARALLEL,
+    };
+
     extern const byte SBox[256];
     extern const byte InvSBox[256];
     extern const byte RCon[15];

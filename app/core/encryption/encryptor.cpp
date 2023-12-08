@@ -1,8 +1,8 @@
 #include "encryptor.hpp"
 
 namespace encryption {
-    Encryptor::Encryptor(bool use_gpu, unsigned long long int block_count, size_t buff_size) {
-        aes = new aes::AES(use_gpu);
+    Encryptor::Encryptor(aes::gpu_mode mode, unsigned long long int block_count, size_t buff_size) {
+        aes = new aes::AES(mode);
         counter = new counter::Counter(block_count, buff_size);
     }
 
