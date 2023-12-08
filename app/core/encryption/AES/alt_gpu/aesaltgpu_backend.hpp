@@ -2,8 +2,14 @@
 #define RSA_GPU_AESALTGPU_BACKEND_HPP
 
 #define CL_HPP_ENABLE_EXCEPTIONS
+#ifdef _WIN32
 
+#include <CL/opencl.hpp>
+
+#elif __APPLE__
 #include "../../../../libs/opencl/opencl.hpp"
+#endif
+
 #include <map>
 
 #include "../aes_backend.hpp"
