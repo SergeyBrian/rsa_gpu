@@ -6,6 +6,7 @@
 
 #include "cpu/aescpu_backend.hpp"
 #include "gpu/aesgpu_backend.hpp"
+#include "alt_gpu/aesaltgpu_backend.hpp"
 #include "../math_utils.hpp"
 #include "../key.hpp"
 #include "../state.hpp"
@@ -14,7 +15,7 @@ namespace encryption::aes {
     class AES {
         AESBackend *backend;
     public:
-        explicit AES(bool use_gpu);
+        explicit AES(gpu_mode mode);
 
         byte *encrypt(Key *key,
                       const byte *input,

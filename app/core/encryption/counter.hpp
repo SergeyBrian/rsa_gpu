@@ -19,7 +19,7 @@ namespace encryption::counter {
     public:
         Counter(unsigned long long block_count,
                 unsigned long long buff_size,
-                const std::string &init_str = "I SUCK DICKS");
+                const std::string &init_str = "0123456789ABCDEF");
 
         byte **getCounters();
     };

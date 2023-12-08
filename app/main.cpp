@@ -26,6 +26,13 @@ static struct cag_option options[] = {
                 .description="Use gpu acceleration",
         },
         {
+                .identifier='P',
+                .access_letters="P",
+                .access_name="Parallel",
+                .value_name=nullptr,
+                .description="Use alternative version of gpu acceleration",
+        },
+        {
                 .identifier='k',
                 .access_letters="k",
                 .access_name="key",
@@ -61,7 +68,7 @@ struct configuration {
     bool decrypt;
     const char *input_file_name;
     const char *output_file_name;
-    bool use_gpu;
+    encryption::aes::gpu_mode gpu_mode;
 };
 
 void print_help() {
@@ -85,6 +92,7 @@ int main(int argc, char **argv) {
             .decrypt = false,
             .input_file_name = nullptr,
             .output_file_name = nullptr,
+            .gpu_mode = encryption::aes::CPU,
     };
 
     cag_option_prepare(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
@@ -105,7 +113,10 @@ int main(int argc, char **argv) {
                 config.output_file_name = cag_option_get_value(&context);
                 break;
             case 'G':
-                config.use_gpu = true;
+                config.gpu_mode = encryption::aes::DEFAULT;
+                break;
+            case 'P':
+                config.gpu_mode = encryption::aes::PARALLEL;
                 break;
             case 'h':
             default:
@@ -162,7 +173,7 @@ int main(int argc, char **argv) {
 
     size_t buff_size = MIN(extended_size, MAX_INPUT_BUFFER);
 
-    auto encryptor = encryption::Encryptor(config.use_gpu, extended_size / SECTION_SIZE, buff_size);
+    auto encryptor = encryption::Encryptor(config.gpu_mode, extended_size / SECTION_SIZE, buff_size);
 
     std::vector<byte> input_buffer(buff_size);
 

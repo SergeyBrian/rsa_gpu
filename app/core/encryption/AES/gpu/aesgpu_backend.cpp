@@ -94,7 +94,7 @@ byte *AESGPUBackend::encrypt(encryption::Key *key,
     return unload_states(size);
 }
 
-void AESGPUBackend::XOR(byte *a, const byte *b, size_t size) {
+void AESGPUBackend::XOR(byte *a, const byte *b, const size_t size) {
     cl::Buffer bufA(context, CL_MEM_READ_WRITE, size);
     cl::Buffer bufB(context, CL_MEM_READ_WRITE, size);
     command_queue.enqueueWriteBuffer(bufA, CL_TRUE, 0, size, a);

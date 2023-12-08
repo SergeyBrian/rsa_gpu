@@ -30,6 +30,8 @@ add_executable(rsa_gpu
         app/core/encryption/AES/cpu/aescpu_backend.hpp
         app/core/encryption/AES/aes_backend.cpp
         app/core/encryption/AES/aes_backend.hpp
+        app/core/encryption/AES/alt_gpu/aesaltgpu_backend.cpp
+        app/core/encryption/AES/alt_gpu/aesaltgpu_backend.hpp
 )
 target_link_libraries(rsa_gpu OpenCL)
 

@@ -41,7 +41,7 @@ byte *AESCPUBackend::encrypt(encryption::Key *key,
     return result;
 }
 
-void AESCPUBackend::XOR(byte *a, const byte *b, size_t size) {
+void AESCPUBackend::XOR(byte *a, const byte *b, const size_t size) {
     for (int i = 0; i < size; i++) {
         a[i] ^= b[i];
     }
