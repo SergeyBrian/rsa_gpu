@@ -1,17 +1,35 @@
 void mixColumns(__global unsigned char *state, __global unsigned char *GF28) {
     unsigned char tmpColumn[4];
-    for (int col = 0; col < 4; col++) {
-        for (int row_GF = 0; row_GF < 4; row_GF++) {
-            tmpColumn[row_GF] = 0;
-            for (int col_GF = 0; col_GF < 4; col_GF++) {
-                tmpColumn[row_GF] += state[col + col_GF * 4] * GF28[row_GF * 4 + col_GF];
+
+        for (int col = 0; col < 4; col++) {
+            for (int row_GF = 0; row_GF < 4; row_GF++) {
+                tmpColumn[row_GF] = 0;
+                for (int col_GF = 0; col_GF < 4; col_GF++) {
+                    unsigned char a = state[col + col_GF * 4];
+                    unsigned char b = GF28[row_GF * 4 + col_GF];
+                    unsigned char p = 0;
+
+
+                    for (int i = 0; i < 8; i++) {
+                        if (b & 1) {
+                            p ^= a;
+                        }
+                        bool hi_bit = (a & 0x80) != 0;
+                        a <<= 1;
+                        if (hi_bit) {
+                            a ^= 0x1b;
+                        }
+                        b >>= 1;
+                    }
+
+                    tmpColumn[row_GF] ^= p;
+                }
+            }
+
+            for (int row = 0; row < 4; row++) {
+                state[col + row * 4] = tmpColumn[row];
             }
         }
-
-        for (int row = 0; row < 4; row++) {
-            state[col + row * 4] = tmpColumn[row];
-        }
-    }
 }
 
 void addRoundKey(__global unsigned char *state, __global unsigned char *round_key) {
