@@ -1,6 +1,8 @@
 #ifndef RSA_GPU_MATH_UTILS_HPP
 #define RSA_GPU_MATH_UTILS_HPP
 
+#include <cstdint>
+
 #ifndef WIN32
 
 #include <cstdint>

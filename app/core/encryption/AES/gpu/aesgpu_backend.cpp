@@ -1,5 +1,7 @@
 #include "aesgpu_backend.hpp"
 
+#include <CL/opencl.hpp>
+
 AESGPUBackend::AESGPUBackend() {
     try {
         std::vector<cl::Platform> platforms;
@@ -166,8 +168,7 @@ void AESGPUBackend::shift_rows(const cl::Buffer &bytes, size_t size, int len) {
 
 void AESGPUBackend::mix_columns(const cl::Buffer &bytes, size_t size) {
     kernel[KF_MIX_COLUMNS].setArg(0, bytes);
-    kernel[KF_MIX_COLUMNS].setArg(1, GF28);
-    kernel[KF_MIX_COLUMNS].setArg(2, COLS);
+    kernel[KF_MIX_COLUMNS].setArg(1, COLS);
     command_queue.enqueueNDRangeKernel(kernel[KF_MIX_COLUMNS],
                                        cl::NullRange,
                                        cl::NDRange(size / 16));

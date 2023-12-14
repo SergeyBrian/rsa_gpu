@@ -77,7 +77,7 @@ void AESCPUBackend::shiftRows(byte (*state)[ROWS]) {
     }
 }
 
-void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
+/*void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
     byte tmpColumn[ROWS];
 
     for (int col = 0; col < COLS; col++) {
@@ -93,4 +93,34 @@ void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
         }
     }
 
+}*/
+void AESCPUBackend::mixColumns(byte (*state)[ROWS]) {
+    byte tmpColumn[ROWS];
+
+    for (int col = 0; col < COLS; col++) {
+        for (int row = 0; row < ROWS; row++) {
+            tmpColumn[row] = 0;
+            for (int col_GF = 0; col_GF < COLS; col_GF++) {
+                byte a = state[col_GF][col];
+                byte b = encryption::aes::GF28[row][col_GF];
+                byte p = 0;
+
+                // Умножение в поле Галуа
+                for (int i = 0; i < 8; i++) {
+                    if (b & 1) p ^= a;
+                    bool high_bit_set = (a & 0x80) != 0;
+                    a <<= 1;
+                    if (high_bit_set) a ^= 0x1b; // 0x1b - неприводимый полином для GF(2^8)
+                    b >>= 1;
+                }
+
+                tmpColumn[row] ^= p;
+            }
+        }
+
+        for (int row = 0; row < ROWS; row++) {
+            state[row][col] = tmpColumn[row];
+        }
+    }
 }
+

@@ -49,7 +49,6 @@ add_executable(rsa_gpu
         app/core/encryption/AES/cpu/aescpu_backend.hpp
         app/core/encryption/AES/aes_backend.cpp
         app/core/encryption/AES/aes_backend.hpp
-        app/libs/opencl/opencl.hpp
         app/core/encryption/AES/alt_gpu/aesaltgpu_backend.cpp
         app/core/encryption/AES/alt_gpu/aesaltgpu_backend.hpp
 )

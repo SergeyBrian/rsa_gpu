@@ -46,19 +46,43 @@ __kernel void shiftRows(__global unsigned char *row, int len) {
     }
 }
 
-__kernel void mixColumns(__global unsigned char *bytes, __global unsigned char *GF28, int len) {
-    unsigned char tmpColumn[4];
+__kernel void mixColumns(__global unsigned char *bytes, int len) {
+    const unsigned char GF28[4][4] = {
+            {0x02, 0x03, 0x01, 0x01},
+            {0x01, 0x02, 0x03, 0x01},
+            {0x01, 0x01, 0x02, 0x03},
+            {0x03, 0x01, 0x01, 0x02}
+        };
     int id = get_global_id(0);
+    unsigned char tmpColumn[4];
+
     for (int col = 0; col < 4; col++) {
-        for (int row_GF = 0; row_GF < 4; row_GF++) {
-            tmpColumn[row_GF] = 0;
+        for (int row = 0; row < 4; row++) {
+            tmpColumn[row] = 0;
             for (int col_GF = 0; col_GF < 4; col_GF++) {
-                tmpColumn[row_GF] += bytes[id * 16 + col + col_GF * 4] * GF28[row_GF * 4 + col_GF];
+                unsigned char a = bytes[id * len + col_GF * 4 + col];
+                unsigned char b = GF28[row][col_GF];
+                unsigned char p = 0;
+
+
+                for (int i = 0; i < 8; i++) {
+                    if (b & 0x01) {
+                        p ^= a;
+                    }
+                    bool hi_bit = (a & 0x80) != 0;
+                    a <<= 1;
+                    if (hi_bit) {
+                        a ^= 0x1b;
+                    }
+                    b >>= 1;
+                }
+
+                tmpColumn[row] ^= p;
             }
         }
 
         for (int row = 0; row < 4; row++) {
-            bytes[id * 16 + col + row * 4] = tmpColumn[row];
+            bytes[id * len + col + row * 4] = tmpColumn[row];
         }
     }
 }

@@ -3,8 +3,8 @@
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 
-#include "../../../../libs/opencl/opencl.hpp"
 #include <map>
+#include <CL/opencl.hpp>
 
 #include "../aes_backend.hpp"
 #include "../../state.hpp"
