@@ -1,5 +1,5 @@
 #include "aescpu_backend.hpp"
-
+#define NUM_ROUNDS 14
 AESCPUBackend::AESCPUBackend() = default;
 
 byte *AESCPUBackend::encrypt(encryption::Key *key,
