@@ -54,9 +54,10 @@ namespace encryption {
         word[3] = tmp;
     }
 
-    void Key::SubWord(byte* word) {
-        for (int i = 0; i < sizeof(word); ++i) {
-            word[i] = aes::SBox[word[i]];
+    void Key::SubWord(byte* a) {
+        int i;
+        for (i = 0; i < 4; i++) {
+            a[i] = encryption::aes::SBox[a[i] / 16][a[i] % 16];
         }
     }
 }

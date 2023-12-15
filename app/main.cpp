@@ -158,9 +158,11 @@ int main(int argc, char **argv) {
 
     size_t old_size = size_input_file;
     size_t extended_size;
+    size_t extende = 0;
     if (!config.decrypt) {
         extended_size = size_input_file + sizeof(size_input_file);
-        extended_size += SECTION_SIZE - (extended_size % SECTION_SIZE);
+        extende = SECTION_SIZE - (extended_size % SECTION_SIZE);
+        extended_size += extende;
     } else {
         extended_size = size_input_file;
         if (size_input_file % SECTION_SIZE) {
@@ -199,9 +201,10 @@ int main(int argc, char **argv) {
     if (!config.decrypt) {
         // Сохраняем размер изначального файла, соответственно считываем на sizeof(size_t) меньше
         *reinterpret_cast<size_t *>(input_buffer.data()) = old_size;
-        input_file.read(reinterpret_cast<char *>(input_buffer.data() + sizeof(size_input_file)),
-                        buff_size - sizeof(size_input_file));
-        read_size += buff_size - sizeof(size_input_file);
+        int tmp = buff_size - sizeof(old_size);
+        input_file.read(reinterpret_cast<char *>(input_buffer.data() + sizeof(old_size)),
+                        tmp - extende);
+        read_size += tmp - extende;
         content_size = extended_size;
     } else {
         input_file.read(reinterpret_cast<char *>(input_buffer.data()), buff_size);
@@ -209,12 +212,13 @@ int main(int argc, char **argv) {
     }
 
     do {
-        encryptor.apply(key, buff_size, input_buffer.data());
+        encryptor.apply(key, buff_size, input_buffer.data(), config.decrypt);
         size_t last_write_size;
 
         if (!content_size) {
-            content_size = *reinterpret_cast<size_t *>(input_buffer.data());
-            last_write_size = MIN(buff_size - sizeof(size_t), content_size);
+            content_size = (*reinterpret_cast<size_t*>(input_buffer.data()));
+            int tmp = buff_size - sizeof(content_size);
+            last_write_size = MIN(tmp, content_size);
             output_file.write(reinterpret_cast<const char *>(input_buffer.data() + sizeof(size_t)),
                               last_write_size);
         } else {

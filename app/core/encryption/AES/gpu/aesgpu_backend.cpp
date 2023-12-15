@@ -173,3 +173,43 @@ void AESGPUBackend::mix_columns(const cl::Buffer &bytes, size_t size) {
                                        cl::NullRange,
                                        cl::NDRange(size / 16));
 }
+
+byte *AESGPUBackend::decrypt(encryption::Key *key,
+                             const byte *input,
+                             size_t size) {
+    states = cl::Buffer(context, CL_MEM_READ_WRITE, size);
+
+    kernel[KF_SUB_BYTES].setArg(0, states);
+    kernel[KF_SUB_BYTES].setArg(1, SBox);
+    kernel[KF_SUB_BYTES].setArg(2, InvSBox);
+
+    load_states(input, size);
+    byte *round_keys = key->expand();
+    command_queue.enqueueWriteBuffer(RoundKeys,
+                                     CL_TRUE,
+                                     0,
+                                     SECTION_SIZE * (ROUNDS_COUNT + 1),
+                                     round_keys);
+
+/*    command_queue.finish();
+    auto xxx = new byte[size];
+    command_queue.enqueueReadBuffer(states, CL_TRUE, 0, size, xxx);*/
+
+
+    KeyXOR(states, RoundKeys, 0, size);
+
+    for (int round_idx = 1; round_idx < ROUNDS_COUNT; round_idx++) {
+        sub_bytes(states, size);
+        shift_rows(states, size, COLS);
+        mix_columns(states, size);
+        KeyXOR(states, RoundKeys, round_idx, size);
+    }
+
+    sub_bytes(states, size);
+    shift_rows(states, size, COLS);
+    KeyXOR(states, RoundKeys, ROUNDS_COUNT, size);
+
+    command_queue.finish();
+    delete[] round_keys;
+    return unload_states(size);
+}

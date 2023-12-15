@@ -17,9 +17,9 @@ namespace encryption::aes {
     public:
         explicit AES(gpu_mode mode);
 
-        byte *encrypt(Key *key,
-                      const byte *input,
-                      size_t size);
+        byte *encrypt(Key *key,const byte *input,size_t size);
+
+        byte *decrypt(Key *key,const byte *input,size_t size);
 
         void XOR(byte *a, const byte *b, size_t size);
     };

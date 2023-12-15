@@ -69,6 +69,20 @@ byte *AESALTGPUBackend::encrypt(encryption::Key *key,
 
     return apply_aes(input, size);
 }
+byte *AESALTGPUBackend::decrypt(encryption::Key *key,
+                                const byte *input,
+                                size_t size) {
+    states = cl::Buffer(context, CL_MEM_READ_WRITE, size);
+
+    byte *round_keys = key->expand();
+    command_queue.enqueueWriteBuffer(RoundKeys,
+                                     CL_TRUE,
+                                     0,
+                                     SECTION_SIZE * (ROUNDS_COUNT + 1),
+                                     round_keys);
+
+    return apply_aes(input, size);
+}
 
 void AESALTGPUBackend::XOR(byte *a, const byte *b, const size_t size) {
     cl::Buffer bufA(context, CL_MEM_READ_WRITE, size);

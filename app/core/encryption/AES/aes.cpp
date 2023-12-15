@@ -19,9 +19,11 @@ namespace encryption::aes {
         backend->XOR(a, b, size);
     }
 
-    byte *AES::encrypt(Key *key,
-                       const byte *input,
-                       size_t size) {
+    byte *AES::encrypt(Key *key,const byte *input,size_t size) {
         return backend->encrypt(key, input, size);
+    }
+
+    byte *AES::decrypt(Key *key,const byte *input,size_t size) {
+        return backend->decrypt(key, input, size);
     }
 }
