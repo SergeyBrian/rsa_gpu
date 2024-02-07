@@ -56,6 +56,9 @@ public:
     byte *encrypt(encryption::Key *key,
                   const byte *input,
                   size_t size) override;
+    byte *decrypt(encryption::Key *key,
+                  const byte *input,
+                  size_t size) override;
 
     void XOR(byte *a, const byte *b, size_t size) override;
 };

@@ -173,3 +173,7 @@ void AESGPUBackend::mix_columns(const cl::Buffer &bytes, size_t size) {
                                        cl::NullRange,
                                        cl::NDRange(size / 16));
 }
+
+byte *AESGPUBackend::decrypt(encryption::Key *key, const byte *input, size_t size) {
+    return nullptr;
+}

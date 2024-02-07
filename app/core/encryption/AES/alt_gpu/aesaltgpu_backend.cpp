@@ -108,3 +108,7 @@ void AESALTGPUBackend::XOR(const cl::Buffer &a, const cl::Buffer &b, size_t size
                                        cl::NDRange(size),
                                        cl::NullRange);
 }
+
+byte *AESALTGPUBackend::decrypt(encryption::Key *key, const byte *input, size_t size) {
+    return nullptr;
+}

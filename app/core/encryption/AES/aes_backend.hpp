@@ -13,10 +13,12 @@ namespace encryption::aes {
         PARALLEL,
     };
 
+
     extern const byte SBox[256];
     extern const byte InvSBox[256];
     extern const byte RCon[15];
     extern const byte GF28[4][4];
+    extern const byte InvGF28[4][4];
 
     class AESBackend {
     public:
@@ -24,7 +26,12 @@ namespace encryption::aes {
                               const byte *input,
                               size_t size) = 0;
 
+
         virtual void XOR(byte *a, const byte *b, size_t size) = 0;
+
+        virtual byte *decrypt(Key *key,
+                              const byte *input,
+                              size_t size) = 0;
     };
 }
 

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <cstdlib>
+#include <stdlib.h>
 
 #include "libs/cargs/cargs.h"
 
@@ -29,6 +31,13 @@ static struct cag_option options[] = {
                 .access_name="Parallel",
                 .value_name=nullptr,
                 .description="Use alternative version of gpu acceleration",
+        },
+        {
+                .identifier='e',
+                .access_letters="e",
+                .access_name="ECB",
+                .value_name=nullptr,
+                .description="Use ECB mode",
         },
         {
                 .identifier='k',
@@ -64,6 +73,7 @@ struct configuration {
     bool gen_keys;
     const char *key_name;
     bool decrypt;
+    bool ecb;
     const char *input_file_name;
     const char *output_file_name;
     encryption::aes::gpu_mode gpu_mode;
@@ -88,6 +98,7 @@ int main(int argc, char **argv) {
             .gen_keys = false,
             .key_name = "key",
             .decrypt = false,
+            .ecb = false,
             .input_file_name = nullptr,
             .output_file_name = nullptr,
             .gpu_mode = encryption::aes::CPU,
@@ -103,6 +114,9 @@ int main(int argc, char **argv) {
                 break;
             case 'd':
                 config.decrypt = true;
+                break;
+            case 'e':
+                config.ecb = true;
                 break;
             case 'k':
                 config.key_name = cag_option_get_value(&context);
@@ -157,7 +171,7 @@ int main(int argc, char **argv) {
 
 
     size_t old_size = size_input_file;
-    size_t extended_size;
+    size_t extended_size = 0;
     if (!config.decrypt) {
         extended_size = size_input_file + sizeof(size_input_file);
         extended_size += SECTION_SIZE - (extended_size % SECTION_SIZE);
@@ -196,7 +210,7 @@ int main(int argc, char **argv) {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     size_t read_size = 0;
     size_t content_size = 0;
-    if (!config.decrypt) {
+    if (!config.decrypt) {///////////////
         // Сохраняем размер изначального файла, соответственно считываем на sizeof(size_t) меньше
         *reinterpret_cast<size_t *>(input_buffer.data()) = old_size;
         input_file.read(reinterpret_cast<char *>(input_buffer.data() + sizeof(size_input_file)),
@@ -209,7 +223,7 @@ int main(int argc, char **argv) {
     }
 
     do {
-        encryptor.apply(key, buff_size, input_buffer.data());
+        encryptor.apply(key, buff_size, input_buffer.data(), config.ecb, config.decrypt);
         size_t last_write_size;
 
         if (!content_size) {
@@ -222,7 +236,6 @@ int main(int argc, char **argv) {
             output_file.write(reinterpret_cast<const char *>(input_buffer.data()), last_write_size);
         }
         content_size -= last_write_size;
-
 
         size_t last_read_size = MIN(buff_size, size_input_file - read_size);
         input_file.read(reinterpret_cast<char *>(input_buffer.data()), last_read_size);
